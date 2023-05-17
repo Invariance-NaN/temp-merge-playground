@@ -1,17 +1,38 @@
-  \documentclass{article}
+\documentclass{article}
 
-% Language setting
-% Replace `english' with e.g. `spanish' to change the document language
-\usepackage[english]{babel}
 
-% Set page size and margins
-% Replace `letterpaper' with`a4paper' for UK/EU standard size
-\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2022
 
-% Useful packages
-\usepackage{amsmath}
+
+% ready for submission
+\usepackage{neurips_2022}
+
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+%     \usepackage[preprint]{neurips_2022}
+
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+%     \usepackage[final]{neurips_2022}
+
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2022}
 \usepackage{graphicx}
-\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\usepackage{bm}
 
 \newtheorem{lemma}{Lemma}
 \newtheorem{theorem}{Theorem}
@@ -36,38 +57,114 @@
 \newcommand{\Oo}{\mathcal{O}}
 
 \title{Exact Distributed Structure-Learning for Bayesian Networks}
-%Distributed Learning for Large Scale Bayesian Networks by D-separation Approach
-% The role of causal hidden variables
-\author{}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+\author{%
+  David S.~Hippocampus\thanks{Use footnote for providing further information
+    about author (webpage, alternative address)---\emph{not} for acknowledging
+    funding agencies.} \\
+  Department of Computer Science\\
+  Cranberry-Lemon University\\
+  Pittsburgh, PA 15213 \\
+  \texttt{hippo@cs.cranberry-lemon.edu} \\
+  % examples of more authors
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \AND
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+}
+
 
 \begin{document}
+
+
 \maketitle
 
+
 \begin{abstract}
-Learning the structure of a Bayesian network can be achieved through either constraint-based approaches that test conditional independencies between variables or score-based approaches that find the network maximizing a likelihood-based function. However, these approaches are only practical for a limited number of variables due to their high computational costs. Existing distributed learning approaches approximate the true structure. We present an exact distributed structure-learning algorithm that consists of three phases. First, the algorithm partitions the variables into independent sets using d-separation. Then, in parallel, it finds a locally optimum structure for each partition using either constraint or score-based methods. Third, the local structures are concatenated using information from the first part. The resulting network matches that of a centralized learning algorithm, provided that an exact learning algorithm is used for each partition. The minimum number of variables in each partition equals the maximum number of parents in the network, allowing for a significant reduction in computation time, particularly for sparse networks.
+Learning the structure of a Bayesian network can be achieved through either constraint-based approaches that test conditional independencies between variables or score-based approaches that find the network maximizing a likelihood-based function. However, these approaches are only practical for a limited number of variables due to their high computational costs. Existing distributed learning approaches approximate the true structure. We present an exact distributed structure-learning algorithm that consists of three phases. First, the algorithm partitions the variables into independent sets using d-separation. Then, in parallel, it finds a locally optimum structure for each partition using either constraint or score-based methods. Third, the local structures are concatenated using information from the first part. The resulting network matches that of a centralized learning algorithm, provided that an exact learning algorithm is used for each partition.
+It is proved that there is a partitioning of variables such that the maximum number of variables in each partition equals the maximum number of parents in the network plus one, allowing for a significant reduction in computation time, particularly for sparse networks.
+%The minimum number of variables in each partition equals the maximum number of parents in the network
 \end{abstract}
 
 \section{Introduction}
-The constraint-based approach is a major class of structure learning algorithms such as PC and FCI that is based on independence (dependence) detection []. 
-Constraint-based algorithms with sufficiency, Markov, and faithfulness assumptions are based on finding dependence between variables without mediator variables using the conditional independence test. 
-The result of this approach will be a class of independence-equivalence (I-equivalence) graphs that is presented as a partially DAG (PDAG). 
-Under the Markov and faithfulness assumptions, constraint-based methods have been shown to asymptotically output the correct PDAG []. 
+Bayesian networks are a main branch of probabilistic graphical models that are used to model data by a directed acyclic graph (DAG).
+Structure learning of Bayesian networks finds a DAG from data such that it can illustrate the correct and interpretable relation between variables\cite{2022boom}.
+The constraint-based and score-based are the two main approaches for learning the DAG from data.\cite{2021kitson}
 
-The PC algorithm is one of the most principal class of constraint-based approach.
-Checking the conditional independence test for each two variable given all combinations of other variables is the main idea of the PC algorithm. 
-It has been based on two main step.
-First, finding true edges by extracting  direct dependency between each two variables (without mediator variables) by doing CI tests. 
-Second, doing orientation of edges that has remained from first step. 
-The computational complexity of the number of conditional independence tests is $\Oo(2^N)$ where $N$ is the number of variables. 
-Of course, the PC algorithm use a tact such that in many practical problem, the number of the required conditional independence tests are very less than $\Oo (2^N)$.
-Because in each step of the PC algorithm some edges is removed and the adjacency set of each node is reduced for sparse graphs. 
+Constraint-based algorithms, such as PC and FCI algorithms, with sufficiency, Markov, and faithfulness assumptions are based on finding dependence between variables without mediator variables using the conditional independence (CI) test \cite{2020cheng}. 
+The result of this approach will be a class of independence-equivalence (I-equivalence) graphs that is presented as a partially DAG (PDAG)\cite{koller}. 
+Score-based algorithms use an optimization approach by defining a likelihood such as BIC that lead to a DAG \cite{koller}.
 
-One of the most limitation to use the PC algorithm for many number of variables is the large number of conditional independence tests. 
-Some approaches such as distributed learning, parallel learning and reducing the computational complexity are developed to overcome this restriction....
+Checking the CI tests over all variables or optimizing the likelihood over all possible graphs causes the computational explosion\cite{2000spirtes}.
+This issue is a main challenge and restriction to use, especially for a huge number of variables\cite{2017Janzhing,2017million}.
+To overcome this problem various strategies are developed.
+Some approaches such as distributed learning \cite{2006Hierarchical,2020PEFdistributed, 2015Classifier}, parallel learning \cite{2019saleh, 2016Li}, reducing the computational complexity \cite{2001Cheng, 2020polynomial, 2019chen}, and decreasing the run-time \cite{2019Reduced, 2022Dual, 2022TimePC} are developed to overcome this restriction.
+Also, some hybrid algorithms that apply both constraint-based and score-based simultaneously are proposed.
+
+Parallel learning is usually used for the computation of CI tests by using GPUs such as \cite{2023saleh}. 
+Also, some researchers try to reduce the computational complexity or run-time for the PC algorithm but specific assumptions and conditions are considered in each approach that cause limitations in usage in practical problems\cite{2019variance,2021wadhwa,2006Chickering}.
+Distributed learning is based on the partitioning of variables into smaller classes or sets of variables and using the usual approach to learn local structures\cite{2020pef}.
+After that, by a method, the local structures interconnect together to construct the global structure which is a PDAG or a DAG.
+The partitioning of variables is the main part of this approach. 
+In many represented approaches, the resulting network by distributed learning is an approximation of a network that is obtained from centralized learning\cite{2019local,2015thousands}.
+
+
+
+%The constraint-based approach is a major class of structure learning algorithms such as PC and FCI that is based on independence (dependence) detection \cite{2021kitson}. 
+
+%Under the Markov and faithfulness assumptions, constraint-based methods have been shown to asymptotically output the correct PDAG \cite{2021neurips}. 
+
+%The PC algorithm is one of the most principal classes of constraint-based approaches.
+%Checking the CI tests for every two variables given all combinations of other variables is the main idea of the PC algorithm \cite{2000spirtes}. 
+%It has been based on two main steps.
+%First, finding true edges by extracting  direct dependency between every two variables (without mediator variables) by doing CI tests. 
+%Second, do the orientation of edges that have remained from the first step. 
+%The computational complexity of the number of CI tests is $\Oo (2^N)$ where $N$ is the number of variables \cite{2000spirtes}. 
+%Of course, the PC algorithm uses a tact such that in many practical problems, the number of the required CI tests is very less than $\Oo (2^N)$.
+%Because in each step of the PC algorithm, some edges are removed and the adjacency set of each node is reduced for sparse graphs \cite{2000spirtes, 2017Janzhing}. 
+
+%The number of CI tests is one of the biggest limitations of using the PC algorithm for large numbers of variables \cite{2022boom, 2021wadhwa}. 
+ %For example \cite{2001Cheng} has developed an algorithm by polynomial complexity that has considered the monotone DAG faithfulness assumption that is very conservative and can't use for a large class of problems \cite{2006Chickering}.
+
+In this paper, we develop an exact distributed learning algorithm based on the PC algorithm to reduce the number of CI tests and the run-time for structure learning. 
+In the PC algorithm, the number of adjacents of each node determines the number of CI tests that leads to numerous CI tests but we used all information of the blocking variables to reduce the number of CI tests for partitioning.
+The proposed algorithm has three steps that are the partitioning of variables, learning of local structures, and concatenating of local structures to obtain the global network.
+The partitioning of variables uses the d-separation definition and doing CI tests like that is checked in the PC algorithm.
+So this partitioning is exact and doesn't cause an approximation in structure learning.
+In the second step, each subset of variables is learned by existing constraint-based or score-based algorithms.
+If a score-based algorithm is used, a hybrid algorithm is developed.
+If the PC algorithm selects to learn the local structures a parallel PC algorithm obtain that can reduce the number of CI tests.
+Finally, by using common variables in every two partitioned subsets of variables, the local structures concatenate together and the global network obtain.
+If $p$ is the maximum number of parents in the network, it is proved that by using $p$ iterations of the partitioning algorithm all partitioned subsets have the cardinality lower than or equal to $p+1$.
 
 \section{Background}
 For describing CI between two subsets of the nodes in a DAG, d-separation defines the CI between every two subsets of nodes with respect to a third subset of nodes as follows:
-\begin{definition} [d-separation] \label{definition_d-separation}
+\begin{definition} \cite{koller}[d-separation] \label{definition_d-separation}
     Consider the DAG $\G$ with node set $\V$.
     A trail $\T$ between two nodes $X$ and $Y$ in $\V$ is \emph{active} relative to a set of nodes $\Z$ if 
     \begin{enumerate}
@@ -90,46 +187,50 @@ One commonly used assumption is \emph{faithfulness} which is the converse of the
 \begin{assumption}[faithfulness] \label{assumption_faithfulness}
     $\mathcal{I}(P) \subseteq \mathcal{I}(\mathcal{G})$.
 \end{assumption}
-The distribution $P$ is said to be \emph{ faithful} to the DAG $\G$ if it satisfies the above assumption. Also, if $\I(\G) = \I(P)$, then $\G$ is a P-map (perfect-map) for $P$. 
+The distribution $P$ is said to be \emph{ faithful} to the DAG $\G$ if it satisfies the above assumption.
+By Markovness and faithfulness assumptions, each independence in the distribution $P$ corresponds to a d-separation in the graph.
+If $\I(\G) = \I(P)$, then $\G$ is a P-map (perfect-map) for $P$.
+Hence, existing a P-map for each distribution is an important issue for structure learning.
+It is proved that for all distribution $P$ except a set of them by zero-measure, there is a P-map $\G$.
 
-\section{Partitioning of variables}
+\section{Distributed Approach by d-separation}
 Consider the simple Bayesian network in Fig. \ref{f-simple}(a). By using d-separation, this network can be segmented into some sub-networks. For example, if X3 is observed, this network is partitioned into three segments that have been shown in Fig.\ref{f-simple}(b). In this case, from probability distribution we have
-\begin{equation*}
+$$
     X_1 \perp X_4 \mid X_3~~,~~X_1 \perp X_5 \mid X_3~~,~~X_2 \perp X_4 \mid X_3~~,~~X_2 \perp X_5 \mid X_3~~,~~X_4 \perp X_5 \mid X_3
-\end{equation*}
+$$
 whereas 
-\begin{equation*}
+$$
     X_1 \not\perp X_4~~, ~~X_1\not \perp X_5~~, ~~X_2 \not\perp X_4~~, ~~X_2\not \perp X_5~~, ~~X_4\not \perp X_5
-\end{equation*}
+$$
 and $X_1\not \perp X_2 \mid X_3$. So, $X_3$ plays a separator role between some variables. Then, three subset of variables $\{X_1,X_2,X_3\}$, $\{X_4,X_3\}$ and $\{X_5,X_3\}$ obtain by using d-separation. 
 
 By using matrix representation of conditional independency, the dependency matrix of X3 for the ordered vector of variables $V^o_{X_3} = [X_1, X_2, X_4, X_5]$ can be defined as
-\begin{equation*}
+$$
 D_{X_3} = \left[{\begin{array}{*{20}{c}} 
 1 & 1 & 0 & 0\\
 1 & 1 & 0 & 0\\
 0 & 0 & 1 & 0\\
 0 & 0 & 0 & 1\\
 \end{array}}\right]
-\end{equation*}
+$$
 $D_{X_3}$ has three diagonal blocks corresponding to three segments of the graph partitioning. If the variables ordered as $\bar V^o_{X_3} = [X_1, X_4, X_2, X_5]$ then $\bar D_{X_3}$ is obtained as
-\begin{equation*}
+$$
 \bar D_{X_3} = \left[{\begin{array}{*{20}{c}} 
 1 & 0 & 1 & 0\\
 0 & 1 & 0 & 0\\
 1 & 0 & 1 & 0\\
 0 & 0 & 0 & 1\\
 \end{array}}\right]
-\end{equation*}
+$$
 By using the transformation matrix
-\begin{equation*}
+$$
 P = \left[{\begin{array}{*{20}{c}}
 1 & 0 & 0 & 0\\
 0 & 0 & 1 & 0\\
 0 & 1 & 0 & 0\\
 0 & 0 & 0 & 1\\
 \end{array}}\right]
-\end{equation*}
+$$
 we have 
 \begin{equation}
     P\bar D_{X_3} P^{-1} = D_{X_3}~~~~~,~~~~~P\bar V^o_{X_3} = V^o_{X_3}
@@ -139,7 +240,7 @@ Therefore, by using the dependency matrix $D_{X_3}$, three subsets $\{X_1,X_2,X_
 \begin{figure}[!ht]
     \centering
     \includegraphics[scale=0.30]{Dist-simple-exm.png}
-    \caption{Caption}
+    \caption{(a) True Bayesian network (b) Sub-networks by CI test on $X_3$}
     \label{f-simple}
 \end{figure}
 
@@ -147,18 +248,21 @@ Therefore, by using the dependency matrix $D_{X_3}$, three subsets $\{X_1,X_2,X_
 In the general form, consider random variable set $\X = \{X_1, X_2,\cdots, X_N \}$. The computational complexity to learn by using constraint-based  approaches is $\mathcal{O}(2^N)$.  If the number of variables $N$ is large, the structure learning will be an NP-hard problem and it cannot be solved. 
 Considering the explained strategy, $\X$ can be partitioned to some subsets with fewer elements by using conditional independencies  and d-separation. 
 
-For partitioning $\X$ by $\W \subset \X$, we can use conditional independence tests. For each two variables $X_i,X_j \in \X$ if $X_i\perp X_j \mid \W$ and $X_i\not\perp X_j$ then $X_i$ and $X_j$ are not in the same partition, but if $X_i\not \perp X_j \mid \W$ then $X_i$ and $X_j$ are in the same partition with respect to $\W$.
+\subsection{Partitioning of Variables}
+For partitioning $\X$ by $\W \subset \X$, we can use CI tests. For every two variables $X_i,X_j \in \X$ if $X_i\perp X_j \mid \W$ and $X_i\not\perp X_j$ then $X_i$ and $X_j$ are not in the same partition, but if $X_i\not \perp X_j \mid \W$ then $X_i$ and $X_j$ are in the same partition with respect to $\W$.
 Therefore, the union of all $X_i$ that belong to the same partition and the observed variables set $\W$ make a partition. 
 But if $X_i\perp X_j \mid \W$ and $X_i\perp X_j$ then $\W$ cannot use for partitioning.
 
-The other way for partitioning is the usage of the dependency matrix. In this method, an order for variables is considered and a vector $V^o = [X_1, X_2, \cdots, X_N] \in R^n$ is constructed. Then for $W \subset X$ dependency matrix $D_W$ is calculated such that $D_W(i,i) = 1$ for all $i$ and $D_W(i,j) = 1$ if $X_i\not \perp X_j \mid W$ and $D_W(i,j) = 0$ if $X_i\perp X_j \mid W$ for $i\not = j$. So $D_W$ is a symmetric $(N-\mid W \mid) \times (N-\mid W \mid)$ matrix. Also, $V^o_W$ by removing the elements of $W$ from $V^o$ is obtained. By using the permutation matrix, we have
+The other way for partitioning is the usage of the dependency matrix. In this method, an order for variables is considered and a vector $V^o = [X_1, X_2, \cdots, X_N] \in R^n$ is constructed. Then for $\W \subset X$ dependency matrix $D_W$ is calculated such that $D_W(i,i) = 1$ for all $i$ and $D_W(i,j) = 1$ if $X_i\not \perp X_j \mid \W$ and $D_W(i,j) = 0$ if $X_i\perp X_j \mid \W$ for $i\not = j$. So $D_W$ is a symmetric $(N-\mid \W \mid) \times (N-\mid \W \mid)$ matrix. Also, $V^o_W$ by removing the elements of $\W$ from $V^o$ is obtained. By using the permutation matrix, we have
 $$D_W = P\bar D_W P^{-1} $$
-where $P$ is a transformation matrix that is calculated by multiplication of permutation matrices and $\bar D_W$ is a block diagonal matrix of $D_W$. Therefore, $\bar V^o_W = P V^o_W$ can be used to partition variables with respect to $W$ considering $\bar D_W$.
+where $P$ is a transformation matrix that is calculated by multiplication of permutation matrices and $\bar D_W$ is a block diagonal matrix of $D_W$. Therefore, $\bar V^o_W = P V^o_W$ can be used to partition variables with respect to $\W$ considering $\bar D_W$.
 \par\noindent\rule{\textwidth}{0.5pt}
 \vspace{-0.4cm}
-Algorithm: Finding the best partitioning
+Partitioning Algorithm
 \vspace{0.2cm}
 \par\noindent\rule{\textwidth}{0.5pt}
+Inputs: $\X =\{X_1,\cdots, X_N\}$\\
+Output: $\X_P = \{\X_P^1,\cdots, \X_P^m \}$
 \begin{itemize}
 \item Set $\X_P = \{\X\}$
     \item Set the value of $M$ as the maximum acceptable number of variables in partitions
@@ -180,74 +284,293 @@ Algorithm: Finding the best partitioning
 \vspace{-0.4cm}
 \par\noindent\rule{\textwidth}{0.5pt}
 
-After partitioning, the structure learning method is applied for each partition of variables separately and the structure network of each partition is found. For constructing the complete structure network, local structures must be concatenated with each other. Each partitioning has a common variable set which is $\W$ (observed variables) that is corresponding to some nodes in local networks. So, if local networks are put together by common nodes, the complete structure network for all variables is made.
-
-For example, consider the naive Bayes network in Fig.\ref{f-naive}. We know, $X_i\perp X_j \mid Y$ and $X_i\not\perp X_j$ for each $i\not = j$. So, the variables set $\{Y,X_1,X_2,\cdots, X_n\}$ is partitioned to $X_P = \{ \{X_1,Y\}, \{X_2,Y\}, \cdots, \{X_n,Y\}$ by observation of $Y$. Consequently, we solve $n$ structure learning problems with two variables instead of one problem with $n+1$ variables.
+For example, consider the naive Bayes network in Fig.\ref{f-naive}(a). We know, $X_i\perp X_j \mid Y$ and $X_i\not\perp X_j$ for each $i\not = j$. So, the variables set $\X=\{Y,X_1,X_2,\cdots, X_n\}$ is partitioned to $\X_P = \{ \{X_1,Y\}, \{X_2,Y\}, \cdots, \{X_n,Y\} \}$ by observation of $Y$. Consequently, we solve $n$ structure learning problems with two variables illustrated in Fig.\ref{f-naive}(b) instead of one problem with $n+1$ variables. 
+Of course, for $M=3$ or $d = 1$ in the partitioning algorithm, the number of CI tests is $\mathcal{O}(n^3)$. 
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[scale=0.30]{naive bayes.png}
-    \caption{Caption}
+    \includegraphics[scale=0.30]{Dist-common-cause.png}
+    \caption{(a) Naive Bayes structure with $n$ children. (b) Partitioning the naive Bayes structure by CI on $Y$  }
     \label{f-naive}
 \end{figure}
 
-But for the v-stare structure, Fig.\ref{f-vstare}, we know from probability distribution that $X_i\perp X_j$ and  $X_i\not\perp X_j\mid Y$ for each $i\not = j$. therefore, this structure cannot be partitioned by the proposed algorithm. Therefore, the set of all variables $\{Y,X_1,X_2,\cdots, X_n\}$ will be one partition. As a result, it seems that the minimum number of variables in each partition is limited by the maximum number of parents in the network.
+But for the stare structure, Fig.\ref{f-vstare}, we know from probability distribution that $X_i\perp X_j$ and  $X_i\not\perp X_j\mid Y$ for each $i\not = j$. therefore, this structure cannot be partitioned by the proposed algorithm. Therefore, the set of all variables $\{Y,X_1,X_2,\cdots, X_n\}$ will be one partition. As a result, it seems that the minimum number of variables in each partition is limited by the maximum number of parents in the network.
 %Also, for a v-structure in a network the effect variable is independent of the other variables given the cause variables.
 \begin{figure}[!ht]
     \centering
     \includegraphics[scale=0.30]{v-structure.png}
-    \caption{Caption}
+    \caption{The star structure by $n$ parents}
     \label{f-vstare}
 \end{figure}
 
-To investigate the powerful of d-separation usage in the PC approach, let's check the Alarm data set problem with the true graph in Fig.\ref{Alarm} as a practical example.
-In this problem, the number of variables is $N=37$. If we use the PC algorithm, it will need $O(2^N)$ computational burden that for the Alarm problem we need about $2^{37}=1.37\times 10^{11}$ conditional dependence tests.
-By using d-separation by conditional independence tests on one conditional variable that needs $O(N^3)$ number of conditional independence tests, which is $37^3=50653$ conditional independence test computations for partitioning. By using the variables of the set $\{VENTTUBE, PULMEMBOLUS, TPR, STROKEVOLUME, HR \}$ all variables divide into 6 parts so that the largest part has 21 variables, according to Fig.\ref{Alarm1}. Therefore, we need about $2^{21}=2.1\times 10^6$ conditional independence test computations. Consequently, by using only one iteration of d-separation the computational burden is reduced from $2^{37}=1.37\times 10^{11}$ to $2^{21}=2.1\times 10^6$.
+The number of CI tests in each iteration of the partitioning algorithm is 
+$$
+   2\left( {\begin{array}{*{20}{c}}
+    N\\
+    2
+    \end{array}} \right)\left( {\begin{array}{*{20}{c}}
+    {N - 1}\\
+    i
+    \end{array}} \right)
+$$
+for $j = 1,\cdots, d$. So for all iterations, it is 
+$$
+   2\left( {\begin{array}{*{20}{c}}
+    N\\
+    2
+    \end{array}} \right)\sum\limits_{i = 1}^{ d} {\left( {\begin{array}{*{20}{c}}
+    {N - 1}\\
+    i
+    \end{array}} \right)} 
+    .
+$$
+Hence, selecting the proper values for $M$ and $d$ is an important issue to reduce the number of conditional tests.
+The maximum number of parents in the network has a key role to required iterations by the partitioning algorithm.
+\begin{definition}\label{complete-partitioning}
+    Let the set of variables $\X$. $\X_P = \{\X_P^1,\cdots, \X_P^m \}$ is a complete partitioning of $\X$ if following conditions hold:
+    \begin{enumerate}
+        \item $\X = \bigcup\limits_{i=1}^{m} \X_P^i$,
+        \item $\X_P^i\perp \X_P^j \mid \X_P^i\cap \X_P^j$ for all $i,j$.
+    \end{enumerate}
+\end{definition}
+\begin{theorem}
+    Consider a DAG $\G$ with vertex set $\X$. If $p$ is the maximum number of parents in $\G$, then there is a complete partitioning $\X_P$ for $\X$ by using $p$ iterations of the partitioning algorithm such that 
+    $$ \max\limits_{i} \mid \X_P^i \mid = p+1$$
+    for all $j$ that $\X_P^i \cap \X_P^j\not = \emptyset$. 
+\end{theorem}
+\emph{Proof.}
+    Four basic structures are investigated as follows:
+    \begin{enumerate}
+        \item \emph{Direct path.} In a direct path $X\to Z \to Y$, by observing $Z$, $X$ and $Y$ are separated, i.e. $X\perp Y\mid Z$.
+        Then $\{\{X, Z\}, \{Y, Z\}\}$ is a complete partitioning so that its elements have two nodes.
+        \item \emph{Common cause.} In a common cause structure $X\gets Z \to Y$, by observing $Z$, $X$ and $Y$ are separated, i.e. $X\perp Y\mid Z$.
+        Then $\{\{X, Z\}, \{Y, Z\}\}$ is a complete partitioning so that its elements have two nodes.
+        \item \emph{Collider.} In a collider structure $X\to Z \gets Y$, by observing $Z$, $X$ and $Y$ aren't separated, i.e. $X\not\perp Y\mid Z$.
+        Then $\{\{X, Y, Z\}\}$ is a complete partitioning. In other words, all variables in a collider structure are in a partition so that its cardinality is $p+1$.
+        \item \emph{Triangle (complete DAG).} In a triangle structure, $\I(\hat \G) = \emptyset$ and so all variables are in a partition so that its cardinality is $p+1$.
+    \end{enumerate}
+   In general, direct paths and common cause structures with $n$ edges are partitioned into $n$ partitions with a cardinality of two by the first iteration of the partitioning algorithm. 
+   But the variables in a collider structure with $n$ parents and one effect (altogether $n+1$ variables) or a complete DAG structure $\hat \G$ with $n+1$ nodes cannot be partitioned and so they make an element of the complete partitioning $\X_P$ with the cardinality of $n+1$.
+   Also, obviously, the maximum number of parents in these two types of structures is $n$.
+   For collider structures with $X_1,\cdots, X_n$ parents, the effect variable $Y$ is a parent for the other variables in the DAG $\G$, then $Y$ plays the role of a mediator variable for direct paths between $\X_i$ for $i=1,\cdots,n$ and the children of $Y$. Also, $Y$ and their children are a common cause structure.
+   Consequently, by the first iteration of the partitioning algorithm, $Y$ and their children are separated from each other and the collider structure.
+   On the other side, each parent makes a direct path or common cause with the other variables in the DAG $\G$.
+   Therefore, by observing all $n$ parents in a collider structure it will be separated from the other variables in the DAG $\G$.
+   As a result, by performing $n$th iteration in the partitioning algorithm, the collider structure will be an element of $\X_P$. 
+   Also for a complete DAG structure $\hat\G$ with $n+1$ nodes, there is a node in which the other $n$ nodes are its parents. So similar to a collider structure with $n$ parents, all nodes in the complete DAG structure $\hat\G$ will be separated from the other nodes in the DAG $\G$.
+    
+\hfill$\square$
 
-Also, if we do another iteration of the proposed algorithm it will need to check all conditional independence on two variables for the largest part in the previous step that has 21 variables. Therefore, the computational burden for separation by two variables will be $O(N^4)$ which is about $21^4=194481$.
-As a result, this separation divides the variable set of the previous largest part into three parts which the largest part has 14 variables (see Fig.\ref{Alarm2}). Thus the computational burden to use the PC algorithm in this step will be $O(2^14)$ that presents it needs $16348$ conditional independence test computations to find true structure.
-Consequently, by using two iterations of d-separation the order of the computational burden is reduced from $2^{37}=1.37\times 10^{11}$ to $21^{4}=194481$.
+\subsection{Learning of Local Structures}
+After partitioning, the structure learning method is applied for each partition of variables separately and the structure network of each partition is found. 
+Let $\X_P = \{\X_P^1,\cdots, \X_P^m \}$ be a complete partitioning of $\X$ that is obtained of the partitioning part.
+Each set of variables $\X_P^i$ for $i=1,\cdots,m$ can be learned by score-based or constraint-based algorithms separately. 
+The local structures $\G_i$ for $i=1,\cdots,m$ are obtained.
+
+If the PC algorithm is used to learn local structures, a modified parallel PC algorithm will be developed.
+In the PC algorithm, the number of adjacents of each node determines the number of CI tests. For example, consider the naive Bayes network in Fig.\ref{f-naive}(a). $Y$ has $n$ adjacent nodes. Therefore, the PC algorithm must check $\mathcal{O}(2^n)$ number of CI tests to find the true skeleton structure. 
+But as mentioned in the previous subsection, by using the partitioning algorithm and checking $\mathcal{O}(n^3)$ number of CI tests, $n$ structures with two variables illustrated in Fig.\ref{f-naive}(b) must be learned.
+So the number of CI tests is $\mathcal{O}(n^3)$ for finding local structures.
+In addition, a parallel computation approach can be used to learn these $n$ local structures to reduce the learning run-time.
+
+If score-based algorithms are used, hybrid learning is developed.
+The first part is based on constraint-based and CI tests and the second part uses a score function and nonlinear optimization methods.
+As we know, it has been proved that score-based learning is a $\mathcal{NP}$-hard problem \cite{koller}.
+So the number of variables is an important issue in practical problems.
+Partitioning variables by d-separated definition helps to reduce the number of variables for score-based learning.
+
+\subsection{Concatenating of Local Structures}
+For constructing the complete structure network, local structures that learn in the previous part must be concatenated with each other. Each partitioning has a common variable set which is $\W$ (observed variables) that is corresponding to some nodes in local networks. So, if local networks are put together by common nodes, the complete structure network for all variables is made. 
+
+\begin{definition}
+    Consider two graphs $\G_1$ and $\G_2$. 
+    Then $\G = \G_1 \sqcup \G_2$ makes a connected graph $\G$ by connecting $\G_1$ and $\G_2$ together with common nodes. $\G = \G_1 \oplus \G_2$ constructs a disconnected graph $\G$ so that $\G_1$ and $\G_2$ are separated part of it. 
+\end{definition}
+\par\noindent\rule{\textwidth}{0.5pt}
+\vspace{-0.4cm}
+Concatenating Algorithm
+\vspace{0cm}
+\par\noindent\rule{\textwidth}{0.5pt}
+input: $\X_P = \{\X_P^1,\cdots, \X_P^m \}$ and local structures $\G_i$ for $i=1,\cdots,m$.\\
+output: Global network $\hat \G$
+\begin{itemize}
+    \item Consider $\hat \G \gets \G_1$ and $\X \gets \X_P^1$.
+    \item for $i = 2, \cdots, m$ \\
+    Compute $\W = \X \cap \X_P^i$\\
+    if $\W \not = \emptyset$\\
+     $\hat \G \gets \G_i \sqcup \hat \G$  by $\W$\\
+    else\\
+    $\hat \G \gets \hat \G \oplus \G_i$\\
+    $\X \gets \X \cup \X_P^i$\\
+    $i \gets i+1$   
+   
+\end{itemize}
+\vspace{-0.4cm}
+\par\noindent\rule{\textwidth}{0.5pt}
+
+\section{Considerations}
+All common variables in $\W$ are non-collider variables.
+By interconnecting each two local structures $\G_1$ and $\G_2$
+the common variable between them must be a mediator variable in a direct path or a common cause variable in a common cause structure, not a collider variable.
+If a constraint-based algorithm is used for local structure learning $\G_1$ and $\G_2$ are PDAGs.
+After concatenating, the common variables between every two local structures must be checked. 
+If the common variable is a collider variable the orientation of the connected edges must be checked and their orientation must be changed by orientation rules.
+
+For the score-based algorithms, the situation is different from the constraint-based ones.
+When a score-based algorithm is used for local structure learning, every two partitions that have common variables must transmit between themselves the orientation of edges that connect to the common variables to prevent they don't form collider structures between two partitions.
+Hence, for optimizing the score function in each partition of variables, extra constraints are forced on the orientation of the connected edges to the common variables by using the information on the edge orientation in the other partition.
+
+Another concern in concatenating local structures is about making a cycle in the global network. Theorem \ref{the-cycle} guarantees that there is no cycle in the resulting graph from the proposed distributed approach. 
+
+\begin{theorem}\label{the-cycle}  
+    If the applied algorithm for the local structures learning results in the P-map, then the resulting graph from the proposed distributed algorithm has no cycle.
+\end{theorem}
+\emph{Proof.}
+    Without losing the generality, we consider two partitions.
+     Consider $\X_P = \{\X_P^1, \X_P^2\}$ are two partitions of variables, and $\G_1$ and $\G_2$ are learned by a constraint-based algorithm or a score-based one. Then both of them are PDAGs or DAGs respectively. Hence they don't have any cycle. So the common variables between them can be made a cycle when two PDAGs or DAGs $\G_1$ and $\G_2$ are concatenated together, i.e. $\hat \G = \G_1 \sqcup \G_2$. 
+    Consider $W_1,W_2\in \X_P^1 \cap \X_P^2$. Suppose that $\hat\G$ has a cycle. Therefore, there is a direct path from $W_1$ to $W_2$ in $\G_1$ and a direct path from $W_2$ to $W_1$ in $\G_2$. So there is no immorality (unshielded collider) in two direct paths. Because $\G_1$ and $\G_2$ are P-map for $\X_P^1$ and $\X_P^2$, the immorality in the true graph $\G$ is detected by all constraint-based and score-based algorithms uniquely from observational data. So there is no immorality in the true graph. Also, then all edges in two paths exist in the true graph $\G$. Hence, all edges in two directed paths are in the $\G$. Because the  sum of the length of these two paths between $W_1$ and $W_2$ is at least 4 and there is no immorality, there is a cycle in the $\G$ that is a contradiction. 
+\hfill$\square$
+
+\section{Discussion}
+The idea of the proposed partitioning comes from the PC algorithm.
+To investigate the intelligence of the PC algorithm for reducing the number of CI tests, let's check the Alarm data set problem with the true graph in Fig.\ref{Alarm} as a practical example.
+In this problem, the number of variables is $N=37$. In an analytical manner, the PC algorithm will need $\Oo(2^N)$ CI tests that for the Alarm problem it needs about $2^{37}=1.37\times 10^{11}$ CI tests.
+By using CI tests on one conditional variable that needs $\Oo(N^3)$ number of CI tests, which is $37^3=50653$ CI tests for partitioning. Using the variables of the set $\{VENTTUBE, PULMEMBOLUS, TPR, STROKEVOLUME, HR \}$ all variables divide into 6 parts so that the largest part has 21 variables, according to Fig.\ref{Alarm1}. Therefore, about $2^{21}=2.1\times 10^6$ CI tests require for learning these variables by the PC algorithm. Consequently, by using only one iteration of the proposed partitioning the number of variables is reduced from 37 to 21. If a score-based algorithm is used for local structure learning, reducing the number of variables from 37 to 21 causes a significant reduction in the run-time of the optimization problem. 
+
+Also, if we do another iteration of the proposed partitioning algorithm it will need to check all CIs on two variables for the largest part of the previous step which has 21 variables. Therefore, the number of CI tests for separation by two variables will be $\Oo(N^4)$ which is about $21^4=194481$.
+As a result, this separation divides the variable set of the previous largest part into three parts which the largest part has 14 variables (see Fig.\ref{Alarm2}).
+So, by $37^3+21^4 = 245134$ CI tests, the number of variables reduces from 37 to 14.
+%Thus the CI tests to use the PC algorithm in this step will be $O(2^{14})$ that is $16348$ CI tests to find true structure.
+%Consequently, by using two iterations of d-separation the order of the computational burden is reduced from $2^{37}=1.37\times 10^{11}$ to $2^{14}=194481$.
+If a score-based algorithm is used for local structure learning, a hybrid algorithm is developed so that the run-time of optimization problems is reduced significantly because of reducing the number of variables.
+
+Now, a question arises: \emph{"What is the difference between the PC algorithm and the proposed distributed one when the PC algorithm is used for local structure learning? "} 
+
+\emph{Response.} Although the PC algorithm uses reducing the number of required CI tests, the proposed distributed approach has two advantages with respect to the PC algorithm as follows:
+\begin{enumerate}
+    \item By partitioning the variables,  local structure learning can be done by parallel computing. Therefore, the parallel PC algorithm is faster than the PC one.
+    \item The PC algorithm based on reducing the number of adjacents of each variable can reduce the number of CI tests. This property is dependent on the degree of each node in the true network which is the sum of children and parents of the node. But we prove that the number of variables in each partition is only dependent on the number of parents. As a result, the proposed partitioning algorithm leads to smaller partitions than the PC one. As mentioned for the naive Bayes network Fig.\ref{f-naive}(a) the degree of node $Y$ is $n$ but the maximum number of parents is one.
+    So the PC algorithm needs $\Oo(2^n)$ CI tests to learn the true skeleton but the proposed distributed algorithm needs $\Oo(n^3)$ CI tests for finding the true skeleton.
+
+    
+\end{enumerate}
+
+
+
+\begin{thebibliography}{1}
+
+\medskip
+{
+\small
+
+\bibitem{2022boom}
+van den Boom, W., De Iorio, M. and Beskos, A., 2022. Bayesian learning of graph substructures. Bayesian Analysis, 1(1), pp.1-29.
+
+\bibitem{2021kitson}
+Kitson, N.K., Constantinou, A.C., Guo, Z., Liu, Y. and Chobtham, K., (2021). A survey of Bayesian Network structure learning.
+
+\bibitem{2020cheng}
+Guo, R., Cheng, L., Li, J., Hahn, P.R. and Liu, H., 2020. A survey of learning causality with data: Problems and methods. ACM Computing Surveys (CSUR), 53(4), pp.1-37.
+
+\bibitem{koller}
+Koller, D. and Friedman, N., 2009. Probabilistic graphical models: principles and techniques. MIT press.
+
+\bibitem{2000spirtes}
+Spirtes, P., Glymour, C.N., Scheines, R. and Heckerman, D., 2000. Causation, prediction, and search. MIT press.
+
+\bibitem{2017Janzhing}
+Peters, J., Janzing, D. and Schölkopf, B., 2017. Elements of causal inference: foundations and learning algorithms (p. 288). The MIT Press.
+
+\bibitem{2017million}
+Ramsey, J., Glymour, M., Sanchez-Romero, R. and Glymour, C., 2017. A million variables and more: the fast greedy equivalence search algorithm for learning high-dimensional graphical causal models, with an application to functional magnetic resonance images. International journal of data science and analytics, 3, pp.121-129.
+
+\bibitem{2006Hierarchical}
+Hwang, K.B., Kim, B.H. and Zhang, B.T., 2006. Learning hierarchical Bayesian networks for large-scale data analysis. In Neural Information Processing: 13th International Conference, ICONIP 2006, Hong Kong, China, October 3-6, 2006. Proceedings, Part I 13 (pp. 670-679). Springer Berlin Heidelberg.
+
+\bibitem{2020PEFdistributed}
+Gu, J. and Zhou, Q., 2020. Learning big Gaussian Bayesian networks: Partition, estimation and fusion. The Journal of Machine Learning Research, 21(1), pp.6340-6370.
+
+\bibitem{2015Classifier}
+Bouhamed, H., Masmoudi, A. and Rebai, A., 2015. Bayesian classifier structure-learning using several general algorithms. Procedia Computer Science, 46, pp.476-482.
+
+\bibitem{2019saleh}
+Zarebavani, B., Jafarinejad, F., Hashemi, M. and Salehkaleybar, S., 2019. cuPC: CUDA-based parallel PC algorithm for causal structure learning on GPU. IEEE Transactions on Parallel and Distributed Systems, 31(3), pp.530-542.
+
+\bibitem{2016Li}
+Le, T.D., Hoang, T., Li, J., Liu, L., Liu, H. and Hu, S., 2016. A fast PC algorithm for high dimensional causal discovery with multi-core PCs. IEEE/ACM transactions on computational biology and bioinformatics, 16(5), pp.1483-1495.
+
+\bibitem{2001Cheng}
+Cheng, J., Grainer, G., Kelly, J., Bell, D.A. and Lius, W., 2001. Learning Bayesian networks from data: An information-theory based approach, 2001. URL citeseer. ist. psu. edu/628344. html.
+
+\bibitem{2020polynomial}
+Gao, M., Ding, Y. and Aragam, B., 2020. A polynomial-time algorithm for learning nonparametric causal graphs. Advances in Neural Information Processing Systems, 33, pp.11599-11611.
+
+\bibitem{2019chen}
+Chen, W., Drton, M. and Wang, Y.S., 2019. On causal discovery with an equal-variance assumption. Biometrika, 106(4), pp.973-980.
+
+\bibitem{2019Reduced}
+Sondhi, A. and Shojaie, A., 2019. The Reduced PC-Algorithm: Improved Causal Structure Learning in Large Random Networks. J. Mach. Learn. Res., 20(164), pp.1-31.
+
+\bibitem{2022Dual}
+Giudice, E., Kuipers, J. and Moffa, G., 2022, September. The Dual PC Algorithm for Structure Learning. In International Conference on Probabilistic Graphical Models (pp. 301-312). PMLR.
+
+\bibitem{2022TimePC}
+Biswas, R. and Shlizerman, E., 2022. Statistical perspective on functional and causal neural connectomics: The Time-Aware PC algorithm. PLOS Computational Biology, 18(11), p.e1010653.
+
+\bibitem{2023saleh}
+Shahbazinia, A., Salehkaleybar, S. and Hashemi, M., 2023. ParaLiNGAM: Parallel causal structure learning for linear non-Gaussian acyclic models. Journal of Parallel and Distributed Computing, 176, pp.114-127.
+
+\bibitem{2019variance}
+Chen, W., Drton, M. and Wang, Y.S., 2019. On causal discovery with an equal-variance assumption. Biometrika, 106(4), pp.973-980.
+
+\bibitem{2021wadhwa}
+Wadhwa, S. and Dong, R., 2021. On the Sample Complexity of Causal Discovery and the Value of Domain Expertise. arXiv preprint arXiv:2102.03274.
+
+\bibitem{2006Chickering}
+Chickering, D.M. and Meek, C., 2006. On the incompatibility of faithfulness and monotone DAG faithfulness. Artificial Intelligence, 170(8-9), pp.653-666.
+
+\bibitem{2020pef}
+Gu, J. and Zhou, Q., 2020. Learning big Gaussian Bayesian networks: Partition, estimation and fusion. The Journal of Machine Learning Research, 21(1), pp.6340-6370.
+
+\bibitem{2019local}
+Talvitie, T., Eggeling, R. and Koivisto, M., 2019. Learning Bayesian networks with local structure, mixed variables, and exact algorithms. International Journal of Approximate Reasoning, 115, pp.69-95.
+
+\bibitem{2015thousands}
+Scanagatta, M., de Campos, C.P., Corani, G. and Zaffalon, M., 2015. Learning Bayesian networks with thousands of variables. Advances in neural information processing systems, 28.
+
+\bibitem{2021alarm}
+Constantinou, A.C., Liu, Y., Chobtham, K., Guo, Z. and Kitson, N.K., 2021. Large-scale empirical validation of Bayesian Network structure learning algorithms with noisy data. International Journal of Approximate Reasoning, 131, pp.151-188.
+%\bibitem{2009Pearl}
+%Pearl, J., 2009. Causality. Cambridge University Press.
+
+
+
+
+}
+
+\end{thebibliography}
 
 \begin{figure}
     \centering
-    \includegraphics[scale=1]{Alarm.png}
-    \caption{Caption}
+    \includegraphics[scale=.9]{Alarm.png}
+    \caption{\cite{2021alarm} The true DAG for Alarm example model}
     \label{Alarm}
 \end{figure}
 
 \begin{figure}
     \centering
     \includegraphics[scale=.9]{Alarmcutcolor.png}
-    \caption{Caption}
+    \caption{Partitioning the Alarm network after one iteration of the proposed algorithm that is equivalent to the CI tests on one variable in the PC algorithm}
     \label{Alarm1}
 \end{figure}
 
 \begin{figure}
     \centering
     \includegraphics[scale=.9]{Alarmcut2color.png}
-    \caption{Caption}
+    \caption{Partitioning the largest network part after two iterations of the proposed algorithm that is equivalent to the CI tests on two variables in the PC algorithm}
     \label{Alarm2}
 \end{figure}
 
 
-
 \end{document}
-
-
-% Learning the structure of a Bayesian network is done either by constraint-based approaches, where conditional independencies between variables are tested, and score-based approaches, where the network that maximizes a likelihood-based function is found. 
-% However, both approaches can be applied to a limited number of variables in practice due to the high computational costs. 
-% Existing distributed learning approaches approximate the ``true'' structure. 
-% We provide an exact distributed structure-learning algorithm consisting of three phases. 
-% First, it uses d-separation to partition the variables into independent sets.
-% Then the algorithm in parallel finds a locally optimum structure for each partition by either constraint or score-based methods. 
-% Third, the local structures are concatenated by using the information from the first part. 
-% The resulting network matches that of a centralized learning algorithm, provided that an exact learning algorithm is used for each partition.
-% The minimum number of variables in each partition equals the maximum number of parents in the network, allowing for significant reduction in the computation time, particularly for sparse networks. 
-
-
-
-
-
-
-
 
