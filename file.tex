@@ -1,4 +1,4 @@
-  \documentclass{article}
+\documentclass{article}
 
 % Language setting
 % Replace `english' with e.g. `spanish' to change the document language
@@ -44,29 +44,34 @@
 \maketitle
 
 \begin{abstract}
-Learning the structure of a Bayesian network can be achieved through either constraint-based approaches that test conditional independencies between variables or score-based approaches that find the network maximizing a likelihood-based function. However, these approaches are only practical for a limited number of variables due to their high computational costs. Existing distributed learning approaches approximate the true structure. We present an exact distributed structure-learning algorithm that consists of three phases. First, the algorithm partitions the variables into independent sets using d-separation. Then, in parallel, it finds a locally optimum structure for each partition using either constraint or score-based methods. Third, the local structures are concatenated using information from the first part. The resulting network matches that of a centralized learning algorithm, provided that an exact learning algorithm is used for each partition. The minimum number of variables in each partition equals the maximum number of parents in the network, allowing for a significant reduction in computation time, particularly for sparse networks.
+Learning the structure of a Bayesian network can be achieved through either constraint-based approaches that test conditional independencies between variables or score-based approaches that find the network maximizing a likelihood-based function. However, these approaches are only practical for a limited number of variables due to their high computational costs. Existing distributed learning approaches approximate the true structure. We present an exact distributed structure-learning algorithm that consists of three phases. First, the algorithm partitions the variables into independent sets using d-separation. Then, in parallel, it finds a locally optimum structure for each partition using either constraint or score-based methods. Third, the local structures are concatenated using information from the first step. The resulting network matches that of a centralized learning algorithm, provided that an exact learning algorithm is used on each partition. The minimum number of variables in each partition equals the maximum number of parents in the network, allowing for a significant reduction in computation time, particularly for sparse networks.
 \end{abstract}
 
 \section{Introduction}
 The constraint-based approach is a major class of structure learning algorithms such as PC and FCI that is based on independence (dependence) detection []. 
-Constraint-based algorithms with sufficiency, Markov, and faithfulness assumptions are based on finding dependence between variables without mediator variables using the conditional independence test. 
-The result of this approach will be a class of independence-equivalence (I-equivalence) graphs that is presented as a partially DAG (PDAG). 
+Constraint-based algorithms with sufficiency, Markov, and faithfulness assumptions are based on finding (conditional) independencies by
+with a test to gauge the likelihood of such independencies.
+The result of this approach is class of independence-equivalent (\(I\)-equivalent) graphs represented as a partial DAG (PDAG). 
 Under the Markov and faithfulness assumptions, constraint-based methods have been shown to asymptotically output the correct PDAG []. 
 
-The PC algorithm is one of the most principal class of constraint-based approach.
-Checking the conditional independence test for each two variable given all combinations of other variables is the main idea of the PC algorithm. 
-It has been based on two main step.
-First, finding true edges by extracting  direct dependency between each two variables (without mediator variables) by doing CI tests. 
-Second, doing orientation of edges that has remained from first step. 
-The computational complexity of the number of conditional independence tests is $\Oo(2^N)$ where $N$ is the number of variables. 
-Of course, the PC algorithm use a tact such that in many practical problem, the number of the required conditional independence tests are very less than $\Oo (2^N)$.
-Because in each step of the PC algorithm some edges is removed and the adjacency set of each node is reduced for sparse graphs. 
+The PC algorithm is one of the primary constraint-based approaches.
+It first finds an undirected graph by starting from the
+complete graph and iteratively removing edges
+based on a series of conditional independence (CI) tests to obtain; it then
+orients some of these edges using information from the conditional independencies.
 
-One of the most limitation to use the PC algorithm for many number of variables is the large number of conditional independence tests. 
-Some approaches such as distributed learning, parallel learning and reducing the computational complexity are developed to overcome this restriction....
+The computational complexity of the number of conditional independence tests is $\Oo(2^N)$ in the worst case, where $N$ is the number of variables. 
+That said, in many practical problems (namely, those with sparse), the PC algorithm 
+can use fewer conditional independence tests, as removing edges reduces
+the number of tests needed later in the algorithm.
+
+This exponential complexity limits the use of the PC algorithm for non-sparse
+graphs with more than a handful of variables. We present an algorithm that
+allows for a distributed approach to this problem, increasing the maximum
+viable network size for such algorithms.
 
 \section{Background}
-For describing CI between two subsets of the nodes in a DAG, d-separation defines the CI between every two subsets of nodes with respect to a third subset of nodes as follows:
+For describing conditional independencies between two subsets of the nodes in a DAG, d-separation defines the CI between every two subsets of nodes with respect to a third subset of nodes as follows:
 \begin{definition} [d-separation] \label{definition_d-separation}
     Consider the DAG $\G$ with node set $\V$.
     A trail $\T$ between two nodes $X$ and $Y$ in $\V$ is \emph{active} relative to a set of nodes $\Z$ if 
@@ -76,24 +81,26 @@ For describing CI between two subsets of the nodes in a DAG, d-separation define
     \end{enumerate}
     The node subsets $\X$ and $\Y$ are \emph{d-separated} given the subset $\Z$, if there is no active
     trail between any node $X \in \X$ and any node $Y \in \Y$ given $\Z$.
-
 \end{definition}
-If $\X$ and $\Y$ are \emph{d-separated} given $\Z$, denoted $d-sep_{\G}(\X,\Y \mid \Z )$, the paths between $\X$ and $\Y$ are blocked by $\Z$ and we say $\X$ is independent on $\Y$ given $\Z$. $\I (\G)$ is the set of all independencies corresponding to d-separation.
+If $\X$ and $\Y$ are \emph{d-separated} given $\Z$, denoted $dsep_{\G}(\X,\Y \mid \Z )$, the paths between $\X$ and $\Y$ are blocked by $\Z$ and we say $\X$ is independent to $\Y$ given $\Z$. $\I (\G)$ is the set of all independencies corresponding to d-separation.
 Let $\I(P)$ denote the set of all conditional independencies implied by the distribution $P$.
-Markovness and faithfulness assumptions are two necessary assumptions to make a correspondence between $\I (\G)$ and $\I (P)$.
-\begin{assumption}[Markovness] \label{assumption_Markovness}
+The Markovian and faithfulness assumptions give us a correspondence between $\I(\G)$ and $\I(P)$.
+
+The Makovian assumption is as follows:
+\begin{assumption}[Markovian] \label{assumption_Markovness}
     $\I(\G)\subseteq \I(P)$.
 \end{assumption}
-However, the Markov condition (MC) is insufficient to guide learning Bayesian networks from observational data, because, for example, a fully connected DAG has $\I(\G)=\emptyset$ and hence satisfies MC for any observational distribution.
-So other assumptions are needed. 
-One commonly used assumption is \emph{faithfulness} which is the converse of the MC. 
+However, the Markov condition (MC) is insufficient to learn Bayesian networks from observational data because, for example, a fully connected DAG has $\I(\G) = \emptyset$ and hence satisfies MC for any observational distribution.
+Thus some other assumption connecting \(\G\) and \(P\) is needed.
+A common assumption is \emph{faithfulness}, the converse of the MC. 
 \begin{assumption}[faithfulness] \label{assumption_faithfulness}
     $\mathcal{I}(P) \subseteq \mathcal{I}(\mathcal{G})$.
 \end{assumption}
-The distribution $P$ is said to be \emph{ faithful} to the DAG $\G$ if it satisfies the above assumption. Also, if $\I(\G) = \I(P)$, then $\G$ is a P-map (perfect-map) for $P$. 
+The distribution $P$ is said to be \emph{faithful} to the DAG $\G$ if it satisfies the above assumption. Also, if $\I(\G) = \I(P)$, as implied by the
+two assumptions, then $\G$ is a P-map (perfect-map) for $P$. 
 
 \section{Partitioning of variables}
-Consider the simple Bayesian network in Fig. \ref{f-simple}(a). By using d-separation, this network can be segmented into some sub-networks. For example, if X3 is observed, this network is partitioned into three segments that have been shown in Fig.\ref{f-simple}(b). In this case, from probability distribution we have
+Consider the simple Bayesian network in Fig.\! \ref{f-simple} (a). By using d-separation, this network can be segmented into several sub-networks. For example, if \(X_3\) is observed, this network is partitioned into the three segments shown in Fig.\! \ref{f-simple} (b). In this case, we have
 \begin{equation*}
     X_1 \perp X_4 \mid X_3~~,~~X_1 \perp X_5 \mid X_3~~,~~X_2 \perp X_4 \mid X_3~~,~~X_2 \perp X_5 \mid X_3~~,~~X_4 \perp X_5 \mid X_3
 \end{equation*}
@@ -101,9 +108,9 @@ whereas
 \begin{equation*}
     X_1 \not\perp X_4~~, ~~X_1\not \perp X_5~~, ~~X_2 \not\perp X_4~~, ~~X_2\not \perp X_5~~, ~~X_4\not \perp X_5
 \end{equation*}
-and $X_1\not \perp X_2 \mid X_3$. So, $X_3$ plays a separator role between some variables. Then, three subset of variables $\{X_1,X_2,X_3\}$, $\{X_4,X_3\}$ and $\{X_5,X_3\}$ obtain by using d-separation. 
+and $X_1\not \perp X_2 \mid X_3$. So, $X_3$ plays a separator role between some variables. Then, three subsets of variables $\{X_1, X_2, X_3\}$, $\{X_3, X_4\}$ and $\{X_3,X_5\}$ obtain by using d-separation. 
 
-By using matrix representation of conditional independency, the dependency matrix of X3 for the ordered vector of variables $V^o_{X_3} = [X_1, X_2, X_4, X_5]$ can be defined as
+By using the matrix representation of conditional independencies, the dependency matrix of \(X_3\) for the ordered vector of variables $V^o_{X_3} = [X_1, X_2, X_4, X_5]$ can be defined as
 \begin{equation*}
 D_{X_3} = \left[{\begin{array}{*{20}{c}} 
 1 & 1 & 0 & 0\\
@@ -112,7 +119,7 @@ D_{X_3} = \left[{\begin{array}{*{20}{c}}
 0 & 0 & 0 & 1\\
 \end{array}}\right]
 \end{equation*}
-$D_{X_3}$ has three diagonal blocks corresponding to three segments of the graph partitioning. If the variables ordered as $\bar V^o_{X_3} = [X_1, X_4, X_2, X_5]$ then $\bar D_{X_3}$ is obtained as
+$D_{X_3}$ has three diagonal blocks corresponding to three segments of the graph partitioning. If the variables are ordered as $\bar V^o_{X_3} = [X_1, X_4, X_2, X_5]$ then $\bar D_{X_3}$ is obtained as
 \begin{equation*}
 \bar D_{X_3} = \left[{\begin{array}{*{20}{c}} 
 1 & 0 & 1 & 0\\
@@ -121,7 +128,7 @@ $D_{X_3}$ has three diagonal blocks corresponding to three segments of the graph
 0 & 0 & 0 & 1\\
 \end{array}}\right]
 \end{equation*}
-By using the transformation matrix
+By using the permutation matrix
 \begin{equation*}
 P = \left[{\begin{array}{*{20}{c}}
 1 & 0 & 0 & 0\\
@@ -134,7 +141,7 @@ we have
 \begin{equation}
     P\bar D_{X_3} P^{-1} = D_{X_3}~~~~~,~~~~~P\bar V^o_{X_3} = V^o_{X_3}
 \end{equation}
-Therefore, by using the dependency matrix $D_{X_3}$, three subsets $\{X_1,X_2,X_3\}$, $\{X_4,X_3\}$ and $\{X_5,X_3\}$ obtain. As a result, a structure learning problem of five variables is changed to three structure learning problems with two or three variables. This approach leads to reducing the number of variables and run-time of the structure learning problem by using parallel computing. In other words, a large-scale structure learning problem can be converted to some small structure learning problems.
+Therefore, by using the dependency matrix $D_{X_3}$, three subsets $\{X_1,X_2,X_3\}$, $\{X_4,X_3\}$ and $\{X_5,X_3\}$ are obtain. As a result, a structure learning problem of five variables is changed to three structure learning problems with two or three variables. This approach leads to reducing the number of variables and run-time of the structure learning problem by using parallel computing. In other words, a large-scale structure learning problem can be converted to some small structure learning problems.
 
 \begin{figure}[!ht]
     \centering
@@ -145,7 +152,7 @@ Therefore, by using the dependency matrix $D_{X_3}$, three subsets $\{X_1,X_2,X_
 
 
 In the general form, consider random variable set $\X = \{X_1, X_2,\cdots, X_N \}$. The computational complexity to learn by using constraint-based  approaches is $\mathcal{O}(2^N)$.  If the number of variables $N$ is large, the structure learning will be an NP-hard problem and it cannot be solved. 
-Considering the explained strategy, $\X$ can be partitioned to some subsets with fewer elements by using conditional independencies  and d-separation. 
+Considering the explained strategy, $\X$ can be partitioned to some subsets with fewer elements by using conditional independencies and d-separation. 
 
 For partitioning $\X$ by $\W \subset \X$, we can use conditional independence tests. For each two variables $X_i,X_j \in \X$ if $X_i\perp X_j \mid \W$ and $X_i\not\perp X_j$ then $X_i$ and $X_j$ are not in the same partition, but if $X_i\not \perp X_j \mid \W$ then $X_i$ and $X_j$ are in the same partition with respect to $\W$.
 Therefore, the union of all $X_i$ that belong to the same partition and the observed variables set $\W$ make a partition. 
@@ -200,32 +207,32 @@ But for the v-stare structure, Fig.\ref{f-vstare}, we know from probability dist
     \label{f-vstare}
 \end{figure}
 
-To investigate the powerful of d-separation usage in the PC approach, let's check the Alarm data set problem with the true graph in Fig.\ref{Alarm} as a practical example.
+To investigate the powerful of d-separation usage in the PC approach, let's check the Alarm data set [] problem with the true graph in Fig. \ref{Alarm} as a practical example.
 In this problem, the number of variables is $N=37$. If we use the PC algorithm, it will need $O(2^N)$ computational burden that for the Alarm problem we need about $2^{37}=1.37\times 10^{11}$ conditional dependence tests.
 By using d-separation by conditional independence tests on one conditional variable that needs $O(N^3)$ number of conditional independence tests, which is $37^3=50653$ conditional independence test computations for partitioning. By using the variables of the set $\{VENTTUBE, PULMEMBOLUS, TPR, STROKEVOLUME, HR \}$ all variables divide into 6 parts so that the largest part has 21 variables, according to Fig.\ref{Alarm1}. Therefore, we need about $2^{21}=2.1\times 10^6$ conditional independence test computations. Consequently, by using only one iteration of d-separation the computational burden is reduced from $2^{37}=1.37\times 10^{11}$ to $2^{21}=2.1\times 10^6$.
 
-Also, if we do another iteration of the proposed algorithm it will need to check all conditional independence on two variables for the largest part in the previous step that has 21 variables. Therefore, the computational burden for separation by two variables will be $O(N^4)$ which is about $21^4=194481$.
-As a result, this separation divides the variable set of the previous largest part into three parts which the largest part has 14 variables (see Fig.\ref{Alarm2}). Thus the computational burden to use the PC algorithm in this step will be $O(2^14)$ that presents it needs $16348$ conditional independence test computations to find true structure.
+Also, if we do another iteration of the proposed algorithm it will need to check all conditional independencies on two variables for the largest part in the previous step that has 21 variables. Therefore, the computational burden for separation by two variables will be $O(N^4)$, which is on the order of $21^4=194481$.
+As a result, this separation divides the variable set of the previous largest part into three parts which the largest part has 14 variables (see Fig. \ref{Alarm2}). Thus the computational burden to use the PC algorithm in this step will be $O(2^14)$ that presents it needs $16348$ conditional independence test computations to find true structure.
 Consequently, by using two iterations of d-separation the order of the computational burden is reduced from $2^{37}=1.37\times 10^{11}$ to $21^{4}=194481$.
 
 \begin{figure}
     \centering
     \includegraphics[scale=1]{Alarm.png}
-    \caption{Caption}
+    \caption{Alarm}
     \label{Alarm}
 \end{figure}
 
 \begin{figure}
     \centering
     \includegraphics[scale=.9]{Alarmcutcolor.png}
-    \caption{Caption}
+    % \caption{Caption}
     \label{Alarm1}
 \end{figure}
 
 \begin{figure}
     \centering
     \includegraphics[scale=.9]{Alarmcut2color.png}
-    \caption{Caption}
+    % \caption{Caption}
     \label{Alarm2}
 \end{figure}
 
